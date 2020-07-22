@@ -1,0 +1,10 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="TeamspeakBot-Hoodlife:jar">
+    <output-path>$PROJECT_DIR$/../../Ts Server/TeamspeakBot</output-path>
+    <root id="archive" name="TeamspeakBot-Hoodlife.jar">
+      <element id="module-output" name="TeamspeakBot-Hoodlife" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/../../API´s/teamspeak3-api-1.2.0-with-dependencies.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/../../API´s/mysql-connector-java-5.1.49.jar" path-in-jar="/" />
+    </root>
+  </artifact>
+</component>

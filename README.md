@@ -1,0 +1,2 @@
+# TeamspeakBot-Hoodlife
+ by Lucas
