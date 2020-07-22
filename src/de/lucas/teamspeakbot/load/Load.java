@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 19.7.2020.
  *
- * Bot by Lucas
+ * Bot by Lucass
  */
 
 package de.lucas.teamspeakbot.load;

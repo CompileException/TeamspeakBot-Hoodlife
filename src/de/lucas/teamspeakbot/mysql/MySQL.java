@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 21.7.2020.
  *
- * Bot by Lucas
+ * Bot by Lucass
  */
 
 package de.lucas.teamspeakbot.mysql;
