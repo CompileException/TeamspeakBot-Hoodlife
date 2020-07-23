@@ -9,6 +9,7 @@ package de.lucas.teamspeakbot.load;
 import com.github.theholywaffle.teamspeak3.TS3Api;
 import com.github.theholywaffle.teamspeak3.TS3Config;
 import com.github.theholywaffle.teamspeak3.TS3Query;
+import com.github.theholywaffle.teamspeak3.api.ChannelProperty;
 import com.github.theholywaffle.teamspeak3.api.wrapper.Client;
 import de.lucas.teamspeakbot.events.Events;
 import de.lucas.teamspeakbot.mysql.MySQL;
@@ -33,11 +34,12 @@ public class Datasave {
      */
     public static Random random;
     public static final ArrayList<Integer> onlinesups = new ArrayList<>();
+    public static final ArrayList<String> words = new ArrayList<>();
 
     /*
     TEAM RÄNGE!!
      */
-    public static final int serveradminint = 6;
+    public static final int serveradminint = 48499;
     public static final int leitungint = 49001;
     public static final int headadminrangint = 48522;
     public static final int adminrangint = 48523;
@@ -54,18 +56,20 @@ public class Datasave {
     /*
     SUPPORT RANG
      */
-    public static final int suprangint = 9;
-    public static final int togglebotrangint = 10;
+    public static final int suprangint = 56072;
+    public static final int togglebotrangint = 56073;
+    public static final int chat = 49009;
+    public static final int poke = 49007;
 
     /*
     CHANNEL ID´s
      */
-    public static final int supportchannel = 2;
-    public static final int whitelistchannel = 3;
+    public static final int supportchannel = 44419;
+    public static final int whitelistchannel = 56279;
 
-    public static final int eingangshalle = 1;
-    public static final int ingamechannel = 2;
-    public static final int afkchannel = 3;
+    public static final int eingangshalle = 44309;
+    public static final int ingamechannel = 44427;
+    public static final int afkchannel = 44448;
 
     public String getDatePrefix() {
         final SimpleDateFormat simpleDateFormat = new SimpleDateFormat("[HH:mm:ss] ");
@@ -130,7 +134,9 @@ public class Datasave {
         }
         Datasave.onlinesups.add(client.getId());
         if (!client.isInServerGroup(Datasave.suprangint)) {
-            api.addClientToServerGroup(Datasave.suprangint, client.getDatabaseId());
+            if(!client.isServerQueryClient()) {
+                api.addClientToServerGroup(Datasave.suprangint, client.getDatabaseId());
+            }
         }
     }
 
@@ -158,8 +164,8 @@ public class Datasave {
         /*
         CONFIG
          */
-        config.setHost("127.0.0.1");
-        //config.setQueryPort(10101);
+        config.setHost("185.223.28.104");
+        config.setQueryPort(40014);
 
         /*
         QUERY
@@ -169,9 +175,9 @@ public class Datasave {
         /*
         API
          */
-        api.login("Bot", "SAgb9ddF");
-        //api.selectVirtualServerByPort(9106);
-        api.selectVirtualServerById(1);
+        api.login("HoodLifeQuery", "WMqBOCFF");
+        api.selectVirtualServerByPort(9106);
+        //api.selectVirtualServerById(1);
         api.setNickname(Datasave.botname);
         System.out.println(getDatePrefix() + "[START] Hoodlife-Query started!");
 
@@ -179,19 +185,32 @@ public class Datasave {
             Events.registerEvents();
             Datasave.onlinesups.clear();
             addonlineSupport();
+
+            updateSupport();
+
             System.out.println(getDatePrefix() + "[LISTENER] Alle Events wurden geladen");
         } catch (Exception e) {
             System.out.println(getDatePrefix() + "[LISTENER]FEHLER:");
             System.out.println(e.getMessage());
         }
 
+        for(Client admin : Datasave.api.getClients()) {
+            if(admin.isInServerGroup(Datasave.serveradminint) || admin.isInServerGroup(Datasave.devrangint)) {
+                if(!admin.isInServerGroup(Datasave.chat)) {
+                    Datasave.api.sendPrivateMessage(admin.getId(), "[color=green]Hoodlife Query wieder online![/color]");
+                }
+            }
+        }
 
+/*
         try {
             connectMySQL();
         } catch (Exception e) {
             System.out.println("FEHLER BEIM STARTEN!");
             System.out.println("MYSQL: " + e.getMessage());
         }
+
+ */
 
     }
 
@@ -240,5 +259,45 @@ public class Datasave {
 
     public MySQL getMySQL() { return mySQL; }
     public MySQLAPI getMySQLAPI() { return mySQLAPI; }
+
+    public static void updateSupport() {
+        Timer timer = new Timer();
+        timer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                onlinesups.clear();
+                for(Client c : api.getClients()) {
+                    if(c.isInServerGroup(Datasave.suprangint)) {
+                        onlinesups.add(c.getId());
+                    }
+                }
+                Map<ChannelProperty, String> property = new HashMap<ChannelProperty, String>();
+                if(onlinesups.size() == 0) {
+                    if(!api.getChannelInfo(Datasave.supportchannel).getName().contains("---> Warte auf Support [CLOSED]")) {
+                        property.put(ChannelProperty.CHANNEL_NAME, "---> Warte auf Support [CLOSED]");
+                        Datasave.api.addChannelPermission(Datasave.supportchannel, "i_channel_needed_join_power", 75);
+                        Datasave.api.editChannel(Datasave.supportchannel, property);
+                        property.clear();
+
+                        for(Client client : Datasave.api.getClients()) {
+                            if(client.getChannelId() == Datasave.supportchannel) {
+                                if(!client.getNickname().equalsIgnoreCase("Hood-Life x Support")) {
+                                    Datasave.api.moveClient(client.getId(), Datasave.eingangshalle);
+                                    Datasave.api.sendPrivateMessage(client.getId(), "Der Support wurde geschlossen, da keine Supporter online sind!");
+                                }
+                            }
+                        }
+                    }
+                }else {
+                    if(!api.getChannelInfo(Datasave.supportchannel).getName().contains("---> Warte auf Support [OPEN]")) {
+                        property.put(ChannelProperty.CHANNEL_NAME, "---> Warte auf Support [OPEN]");
+                        Datasave.api.addChannelPermission(Datasave.supportchannel, "i_channel_needed_join_power", 1);
+                        Datasave.api.editChannel(Datasave.supportchannel, property);
+                        property.clear();
+                    }
+                }
+            }
+        }, 1000, 1000);
+    }
 }
 

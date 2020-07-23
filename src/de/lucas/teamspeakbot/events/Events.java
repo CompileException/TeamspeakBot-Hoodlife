@@ -7,9 +7,11 @@
 package de.lucas.teamspeakbot.events;
 
 import com.github.theholywaffle.teamspeak3.api.ChannelProperty;
+import com.github.theholywaffle.teamspeak3.api.TextMessageTargetMode;
 import com.github.theholywaffle.teamspeak3.api.event.*;
 import com.github.theholywaffle.teamspeak3.api.wrapper.Client;
 import de.lucas.teamspeakbot.load.Datasave;
+import de.lucas.teamspeakbot.load.Load;
 import de.lucas.teamspeakbot.mysql.MySQLAPI;
 
 import java.util.HashMap;
@@ -33,12 +35,12 @@ public class Events {
                 /*
                 ADD SUPPORTRANG COMMAND
                  */
-                if(event.getMessage().equalsIgnoreCase("!addsupport")) {
-                    if(client.isInServerGroup(Datasave.supporterrangint) || client.isInServerGroup(Datasave.modrangint) || client.isInServerGroup(Datasave.serveradminint) || client.isInServerGroup(Datasave.devrangint) || client.isInServerGroup(Datasave.helferrangint) || client.isInServerGroup(Datasave.leitungint) || client.isInServerGroup(Datasave.headadminrangint) || client.isInServerGroup(Datasave.adminrangint) || client.isInServerGroup(Datasave.testmodrangint) || client.isInServerGroup(Datasave.testsuprangint) || client.isInServerGroup(Datasave.supleitungrangint) || client.isInServerGroup(Datasave.leitungint)) {
-                        if(!client.isInServerGroup(Datasave.suprangint)) {
+                if (event.getMessage().equalsIgnoreCase("!addsupport")) {
+                    if (client.isInServerGroup(Datasave.supporterrangint) || client.isInServerGroup(Datasave.modrangint) || client.isInServerGroup(Datasave.serveradminint) || client.isInServerGroup(Datasave.devrangint) || client.isInServerGroup(Datasave.helferrangint) || client.isInServerGroup(Datasave.leitungint) || client.isInServerGroup(Datasave.headadminrangint) || client.isInServerGroup(Datasave.adminrangint) || client.isInServerGroup(Datasave.testmodrangint) || client.isInServerGroup(Datasave.testsuprangint) || client.isInServerGroup(Datasave.supleitungrangint) || client.isInServerGroup(Datasave.leitungint)) {
+                        if (!client.isInServerGroup(Datasave.suprangint)) {
                             Datasave.api.addClientToServerGroup(Datasave.suprangint, client.getDatabaseId());
                         } else {
-                            Datasave.api.sendPrivateMessage(client.getId(), "Du hast den Support-Rang bereits (Verwende /removesupport)");
+                            Datasave.api.sendPrivateMessage(client.getId(), "Du hast den Support-Rang bereits (Verwende !removesupport)");
                             return;
                         }
                     } else {
@@ -47,24 +49,30 @@ public class Events {
                 /*
                 REMOVE SUPPORTRANG COMMAND
                 */
-                } else if(event.getMessage().equalsIgnoreCase("!removesupport")) {
-                    if(client.isInServerGroup(Datasave.supporterrangint) || client.isInServerGroup(Datasave.modrangint) || client.isInServerGroup(Datasave.serveradminint) || client.isInServerGroup(Datasave.devrangint) || client.isInServerGroup(Datasave.helferrangint) || client.isInServerGroup(Datasave.leitungint) || client.isInServerGroup(Datasave.headadminrangint) || client.isInServerGroup(Datasave.adminrangint) || client.isInServerGroup(Datasave.testmodrangint) || client.isInServerGroup(Datasave.testsuprangint) || client.isInServerGroup(Datasave.supleitungrangint) || client.isInServerGroup(Datasave.leitungint)) {
-                        if(client.isInServerGroup(Datasave.suprangint)) {
+                } else if (event.getMessage().equalsIgnoreCase("!removesupport")) {
+                    if (client.isInServerGroup(Datasave.supporterrangint) || client.isInServerGroup(Datasave.modrangint) || client.isInServerGroup(Datasave.serveradminint) || client.isInServerGroup(Datasave.devrangint) || client.isInServerGroup(Datasave.helferrangint) || client.isInServerGroup(Datasave.leitungint) || client.isInServerGroup(Datasave.headadminrangint) || client.isInServerGroup(Datasave.adminrangint) || client.isInServerGroup(Datasave.testmodrangint) || client.isInServerGroup(Datasave.testsuprangint) || client.isInServerGroup(Datasave.supleitungrangint) || client.isInServerGroup(Datasave.leitungint)) {
+                        if (client.isInServerGroup(Datasave.suprangint)) {
                             Datasave.api.removeClientFromServerGroup(Datasave.suprangint, client.getDatabaseId());
                         } else {
-                            Datasave.api.sendPrivateMessage(client.getId(), "Du hast den Support-Rang nicht (Verwende /addsupport)");
+                            Datasave.api.sendPrivateMessage(client.getId(), "Du hast den Support-Rang nicht (Verwende !addsupport)");
                             return;
                         }
                     } else {
                         Datasave.api.sendPrivateMessage(client.getId(), "[color=red]Du bist kein Teammitglied![/color]");
                     }
-                } else if(event.getMessage().equalsIgnoreCase("!togglebot")) {
-                    if(client.isInServerGroup(Datasave.supporterrangint) || client.isInServerGroup(Datasave.modrangint) || client.isInServerGroup(Datasave.serveradminint) || client.isInServerGroup(Datasave.devrangint) || client.isInServerGroup(Datasave.helferrangint) || client.isInServerGroup(Datasave.leitungint) || client.isInServerGroup(Datasave.headadminrangint) || client.isInServerGroup(Datasave.adminrangint) || client.isInServerGroup(Datasave.testmodrangint) || client.isInServerGroup(Datasave.testsuprangint) || client.isInServerGroup(Datasave.supleitungrangint) || client.isInServerGroup(Datasave.leitungint)) {
-                        if(!client.isInServerGroup(Datasave.togglebotrangint)) {
+                    /*
+                    TOGGLEBOT
+                     */
+                } else if (event.getMessage().equalsIgnoreCase("!togglebot")) {
+                    if (client.isInServerGroup(Datasave.supporterrangint) || client.isInServerGroup(Datasave.modrangint) || client.isInServerGroup(Datasave.serveradminint) || client.isInServerGroup(Datasave.devrangint) || client.isInServerGroup(Datasave.helferrangint) || client.isInServerGroup(Datasave.leitungint) || client.isInServerGroup(Datasave.headadminrangint) || client.isInServerGroup(Datasave.adminrangint) || client.isInServerGroup(Datasave.testmodrangint) || client.isInServerGroup(Datasave.testsuprangint) || client.isInServerGroup(Datasave.supleitungrangint) || client.isInServerGroup(Datasave.leitungint)) {
+                        if (!client.isInServerGroup(Datasave.togglebotrangint)) {
                             Datasave.api.addClientToServerGroup(Datasave.togglebotrangint, client.getDatabaseId());
                             Datasave.api.sendPrivateMessage(client.getId(), "Du hast nun den ToggleBot Rang!");
                         }
                     }
+                    /*
+                    BROADCAST
+                     */
                 }
             }
 
@@ -74,19 +82,21 @@ public class Events {
 
             @Override
             public void onClientJoin(ClientJoinEvent event) {
-                final Client client = Datasave.api.getClientInfo(event.getClientId());
-                if(Datasave.getInstance().getMySQL().isConnected()) {
-                    Datasave.getInstance().getMySQLAPI().createPlayer(client.getUniqueIdentifier().toString(), client.getNickname());
-                    System.out.println("!!!!!!!! NEW PLAYER CREATED !!!!!!!!!");
-                    System.out.println("Player Name: " + client.getNickname());
-                    System.out.println("Player UID: " + client.getUniqueIdentifier().toString());
-                    System.out.println(" ");
-                } else { System.out.println("MYSQL NOT CONNECTED!"); }
+                try {
+                    Client client = Datasave.api.getClientInfo(event.getClientId());
+                    if(Datasave.getInstance().getMySQL().isConnected()) {
+                        Datasave.getInstance().getMySQLAPI().createPlayer(client.getUniqueIdentifier().toString(), client.getNickname());
+                        System.out.println("!!!!!!!! NEW PLAYER CREATED !!!!!!!!!");
+                        System.out.println("Player Name: " + client.getNickname());
+                        System.out.println("Player UID: " + client.getUniqueIdentifier().toString());
+                        System.out.println(" ");
+                    } else { System.out.println("MYSQL NOT CONNECTED!"); }
 
-                Datasave.getInstance().sendJoinMessageDev(client);
-                if(client.isInServerGroup(Datasave.supporterrangint) || client.isInServerGroup(Datasave.modrangint) || client.isInServerGroup(Datasave.serveradminint) || client.isInServerGroup(Datasave.devrangint) || client.isInServerGroup(Datasave.helferrangint) || client.isInServerGroup(Datasave.leitungint) || client.isInServerGroup(Datasave.headadminrangint) || client.isInServerGroup(Datasave.adminrangint) || client.isInServerGroup(Datasave.testmodrangint) || client.isInServerGroup(Datasave.testsuprangint) || client.isInServerGroup(Datasave.supleitungrangint) || client.isInServerGroup(Datasave.leitungint)) {
-                    Datasave.getInstance().sendJoinMessageTeam(client);
-                }
+                    Datasave.getInstance().sendJoinMessageDev(client);
+                    if(client.isInServerGroup(Datasave.supporterrangint) || client.isInServerGroup(Datasave.modrangint) || client.isInServerGroup(Datasave.serveradminint) || client.isInServerGroup(Datasave.devrangint) || client.isInServerGroup(Datasave.helferrangint) || client.isInServerGroup(Datasave.leitungint) || client.isInServerGroup(Datasave.headadminrangint) || client.isInServerGroup(Datasave.adminrangint) || client.isInServerGroup(Datasave.testmodrangint) || client.isInServerGroup(Datasave.testsuprangint) || client.isInServerGroup(Datasave.supleitungrangint) || client.isInServerGroup(Datasave.leitungint)) {
+                        Datasave.getInstance().sendJoinMessageTeam(client);
+                    }
+                } catch (Exception e) {}
             }
 
 
@@ -113,11 +123,36 @@ public class Events {
             @Override
             public void onClientMoved(ClientMovedEvent event) {
                 Client client = Datasave.api.getClientInfo(event.getClientId());
+                /*
+                WHITELIST WARTERAUM MESSAGE
+                 */
                 if(event.getTargetChannelId() == Datasave.whitelistchannel) {
                     if(!client.isInServerGroup(Datasave.suprangint)) {
                         Datasave.api.pokeClient(client.getId(), "Bitte lies dir das Regelwerk des Servers durch!!");
                         Datasave.api.pokeClient(client.getId(), "https://docs.google.com/document/d/1vd-olAba8GE-qv2R8D_ZmoH-f7cg9gY9b9Yv8KieXjs/edit");
 
+                    } else {
+                        Datasave.api.moveClient(client.getId(), Datasave.eingangshalle);
+                        Datasave.api.sendPrivateMessage(client.getId(), "Du bist ein Teammitglied!");
+                    }
+
+                    /*
+                    SUPPORT WARTERAUM MESSAGE
+                     */
+                } else if(event.getTargetChannelId() == Datasave.supportchannel) {
+                    if(!client.isInServerGroup(Datasave.suprangint)) {
+                        int i1 = 0;
+                        for(Client sup : Datasave.api.getClients()) {
+                            if (!(sup.isServerQueryClient())) {
+                                for (int i = 0; i < sup.getServerGroups().length; i++) {
+                                    if (sup.getServerGroups()[i] == Datasave.suprangint) {
+                                        i1++;
+                                        Datasave.api.pokeClient(sup.getId(), "Der Spieler " + client.getNickname() + " wartet im Support!");
+                                    }
+                                }
+                            }
+                        }
+                        Datasave.api.sendPrivateMessage(event.getClientId(), "[color=red]Es wurden [B]" + i1 + "[/B] Teammitglieder benachrichtigt![/color]");
                     } else {
                         Datasave.api.moveClient(client.getId(), Datasave.eingangshalle);
                         Datasave.api.sendPrivateMessage(client.getId(), "Du bist ein Teammitglied!");
