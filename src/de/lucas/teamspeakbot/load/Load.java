@@ -7,11 +7,6 @@
 package de.lucas.teamspeakbot.load;
 
 
-import com.github.theholywaffle.teamspeak3.TS3Api;
-import com.github.theholywaffle.teamspeak3.TS3Config;
-import com.github.theholywaffle.teamspeak3.TS3Query;
-import de.lucas.teamspeakbot.events.Events;
-import de.lucas.teamspeakbot.mysql.MySQL;
 
 public class Load {
 

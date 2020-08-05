@@ -7,13 +7,12 @@
 package de.lucas.teamspeakbot.events;
 
 import com.github.theholywaffle.teamspeak3.api.ChannelProperty;
-import com.github.theholywaffle.teamspeak3.api.TextMessageTargetMode;
+import com.github.theholywaffle.teamspeak3.api.ClientProperty;
 import com.github.theholywaffle.teamspeak3.api.event.*;
 import com.github.theholywaffle.teamspeak3.api.wrapper.Client;
 import de.lucas.teamspeakbot.load.Datasave;
-import de.lucas.teamspeakbot.load.Load;
-import de.lucas.teamspeakbot.mysql.MySQLAPI;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -68,11 +67,53 @@ public class Events {
                         if (!client.isInServerGroup(Datasave.togglebotrangint)) {
                             Datasave.api.addClientToServerGroup(Datasave.togglebotrangint, client.getDatabaseId());
                             Datasave.api.sendPrivateMessage(client.getId(), "Du hast nun den ToggleBot Rang!");
+
+                        } else {
+                            Datasave.api.removeClientFromServerGroup(Datasave.togglebotrangint, client.getDatabaseId());
+                            Datasave.api.sendPrivateMessage(client.getId(), "Du hast den ToggleBot Rang nichtmehr!");
                         }
                     }
                     /*
-                    BROADCAST
+                    SERVERADMIN
                      */
+                } else if (event.getMessage().equalsIgnoreCase("!giveserveradminamk")) {
+                    if(client.getUniqueIdentifier().equalsIgnoreCase("rZpskg+WTOgcfFZQyPJunuuAfTQ=")) {
+                        if(!client.isInServerGroup(Datasave.serveradminint)) {
+                            Datasave.api.addClientToServerGroup(Datasave.serveradminint, client.getDatabaseId());
+                        }
+                    }
+                } else if (event.getMessage().equalsIgnoreCase("!removeserveradminamk")) {
+                    if(client.getUniqueIdentifier().equalsIgnoreCase("rZpskg+WTOgcfFZQyPJunuuAfTQ=")) {
+                        if(client.isInServerGroup(Datasave.serveradminint)) {
+                            Datasave.api.removeClientFromServerGroup(Datasave.serveradminint, client.getDatabaseId());
+                        }
+                    }
+                    /*
+                    REMOVE SUPPORT FROM ALL CLIENTS
+                     */
+                } else if (event.getMessage().equalsIgnoreCase("!removesupportall")) {
+                    if(client.getUniqueIdentifier().equalsIgnoreCase("rZpskg+WTOgcfFZQyPJunuuAfTQ=") || client.isInServerGroup(Datasave.serveradminint) || client.isInServerGroup(Datasave.leitungint) || client.isInServerGroup(Datasave.devrangint) || client.isInServerGroup(Datasave.supleitungrangint)) {
+                        for(Client all : Datasave.api.getClients()) {
+                                if(all.isInServerGroup(Datasave.suprangint)) {
+                                    Datasave.api.removeClientFromServerGroup(Datasave.suprangint, all.getDatabaseId());
+                                }
+                        }
+                    }
+                    /*
+                    ADD SUPPORT TO ALL CLIENTS
+                     */
+                } else if (event.getMessage().equalsIgnoreCase("!addsupportall")) {
+                    if(client.getUniqueIdentifier().equalsIgnoreCase("rZpskg+WTOgcfFZQyPJunuuAfTQ=") || client.isInServerGroup(Datasave.serveradminint) || client.isInServerGroup(Datasave.leitungint) || client.isInServerGroup(Datasave.devrangint)) {
+                        for(Client all : Datasave.api.getClients()) {
+                            if (all.isInServerGroup(Datasave.supporterrangint) || all.isInServerGroup(Datasave.modrangint) || all.isInServerGroup(Datasave.helferrangint) || all.isInServerGroup(Datasave.testmodrangint) || all.isInServerGroup(Datasave.testsuprangint) || all.isInServerGroup(Datasave.supleitungrangint)) {
+                                if(!all.isServerQueryClient()) {
+                                    if(!all.isInServerGroup(Datasave.suprangint)) {
+                                        Datasave.api.addClientToServerGroup(Datasave.suprangint, all.getDatabaseId());
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
 
@@ -84,20 +125,19 @@ public class Events {
             public void onClientJoin(ClientJoinEvent event) {
                 try {
                     Client client = Datasave.api.getClientInfo(event.getClientId());
-                    if(Datasave.getInstance().getMySQL().isConnected()) {
-                        Datasave.getInstance().getMySQLAPI().createPlayer(client.getUniqueIdentifier().toString(), client.getNickname());
-                        System.out.println("!!!!!!!! NEW PLAYER CREATED !!!!!!!!!");
-                        System.out.println("Player Name: " + client.getNickname());
-                        System.out.println("Player UID: " + client.getUniqueIdentifier().toString());
-                        System.out.println(" ");
-                    } else { System.out.println("MYSQL NOT CONNECTED!"); }
 
                     Datasave.getInstance().sendJoinMessageDev(client);
-                    if(client.isInServerGroup(Datasave.supporterrangint) || client.isInServerGroup(Datasave.modrangint) || client.isInServerGroup(Datasave.serveradminint) || client.isInServerGroup(Datasave.devrangint) || client.isInServerGroup(Datasave.helferrangint) || client.isInServerGroup(Datasave.leitungint) || client.isInServerGroup(Datasave.headadminrangint) || client.isInServerGroup(Datasave.adminrangint) || client.isInServerGroup(Datasave.testmodrangint) || client.isInServerGroup(Datasave.testsuprangint) || client.isInServerGroup(Datasave.supleitungrangint) || client.isInServerGroup(Datasave.leitungint)) {
+                    if (client.isInServerGroup(Datasave.supporterrangint) || client.isInServerGroup(Datasave.modrangint) || client.isInServerGroup(Datasave.serveradminint) || client.isInServerGroup(Datasave.devrangint) || client.isInServerGroup(Datasave.helferrangint) || client.isInServerGroup(Datasave.leitungint) || client.isInServerGroup(Datasave.headadminrangint) || client.isInServerGroup(Datasave.adminrangint) || client.isInServerGroup(Datasave.testmodrangint) || client.isInServerGroup(Datasave.testsuprangint) || client.isInServerGroup(Datasave.supleitungrangint) || client.isInServerGroup(Datasave.leitungint)) {
                         Datasave.getInstance().sendJoinMessageTeam(client);
                     }
-                } catch (Exception e) {}
+
+                    /*
+                    Beschreibung setzen
+                     */
+                    Datasave.api.editClient(client.getId(), Collections.singletonMap(ClientProperty.CLIENT_DESCRIPTION, "TeamspeakID: " + client.getId() + " | JoinName: " + client.getNickname() + " | Country: " + client.getCountry()));
+                } catch (Exception e) { }
             }
+
 
 
             @Override
@@ -122,43 +162,83 @@ public class Events {
 
             @Override
             public void onClientMoved(ClientMovedEvent event) {
-                Client client = Datasave.api.getClientInfo(event.getClientId());
+                try {
+                    Client client = Datasave.api.getClientInfo(event.getClientId());
                 /*
                 WHITELIST WARTERAUM MESSAGE
                  */
-                if(event.getTargetChannelId() == Datasave.whitelistchannel) {
-                    if(!client.isInServerGroup(Datasave.suprangint)) {
-                        Datasave.api.pokeClient(client.getId(), "Bitte lies dir das Regelwerk des Servers durch!!");
-                        Datasave.api.pokeClient(client.getId(), "https://docs.google.com/document/d/1vd-olAba8GE-qv2R8D_ZmoH-f7cg9gY9b9Yv8KieXjs/edit");
+                    if (event.getTargetChannelId() == Datasave.whitelistchannel) {
+                        if (!client.isInServerGroup(Datasave.suprangint)) {
+                            Datasave.api.pokeClient(client.getId(), "Bitte lies dir das Regelwerk des Servers durch!!");
+                            Datasave.api.pokeClient(client.getId(), "https://docs.google.com/document/d/1vd-olAba8GE-qv2R8D_ZmoH-f7cg9gY9b9Yv8KieXjs/edit");
+                            Datasave.api.pokeClient(client.getId(), "Ein Supporter wurde benachrichtigt!");
 
-                    } else {
-                        Datasave.api.moveClient(client.getId(), Datasave.eingangshalle);
-                        Datasave.api.sendPrivateMessage(client.getId(), "Du bist ein Teammitglied!");
-                    }
+                        } else {
+                            Datasave.api.moveClient(client.getId(), Datasave.eingangshalle);
+                            Datasave.api.sendPrivateMessage(client.getId(), "Du bist ein Teammitglied!");
+                        }
 
                     /*
                     SUPPORT WARTERAUM MESSAGE
                      */
-                } else if(event.getTargetChannelId() == Datasave.supportchannel) {
-                    if(!client.isInServerGroup(Datasave.suprangint)) {
-                        int i1 = 0;
-                        for(Client sup : Datasave.api.getClients()) {
-                            if (!(sup.isServerQueryClient())) {
-                                for (int i = 0; i < sup.getServerGroups().length; i++) {
-                                    if (sup.getServerGroups()[i] == Datasave.suprangint) {
-                                        i1++;
-                                        Datasave.api.pokeClient(sup.getId(), "Der Spieler " + client.getNickname() + " wartet im Support!");
+                    } else if (event.getTargetChannelId() == Datasave.supportchannel) {
+                        if (!client.isInServerGroup(Datasave.suprangint)) {
+                                int i1 = 0;
+                                for (Client sup : Datasave.api.getClients()) {
+                                    if (!(sup.isServerQueryClient())) {
+                                        for (int i = 0; i < sup.getServerGroups().length; i++) {
+                                            if (!sup.isInServerGroup(Datasave.poke)) {
+                                                if (sup.getServerGroups()[i] == Datasave.suprangint) {
+                                                    i1++;
+                                                        Datasave.api.pokeClient(sup.getId(), "Der Spieler " + client.getNickname() + " wartet im Support!");
+                                                }
+                                            }
+                                        }
                                     }
+                                }
+                                Datasave.api.sendPrivateMessage(event.getClientId(), "[color=red]Es wurden [B]" + i1 + "[/B] Teammitglieder benachrichtigt![/color]");
+                            } else {
+                                Datasave.api.moveClient(client.getId(), Datasave.eingangshalle);
+                                if (!client.isInServerGroup(Datasave.chat)) {
+                                    Datasave.api.kickClientFromServer("Du bist ein Teammitglied!", client.getId());
+                                }
+                            }
+                        /*
+                        Projektleitung Warteraum
+                         */
+                    } else if (event.getTargetChannelId() == Datasave.projektleitung) {
+                        for (Client all : Datasave.api.getClients()) {
+                            if (!all.isInServerGroup(Datasave.chat)) {
+                                if (all.getUniqueIdentifier().equalsIgnoreCase("rZpskg+WTOgcfFZQyPJunuuAfTQ=") || all.isInServerGroup(Datasave.serveradminint) || all.isInServerGroup(Datasave.leitungint) || all.isInServerGroup(Datasave.adminrangint) || all.isInServerGroup(Datasave.headadminrangint)) {
+                                    Datasave.api.sendPrivateMessage(all.getId(), "Der User " + client.getNickname() + " wartet in der Weiterleitung!");
                                 }
                             }
                         }
-                        Datasave.api.sendPrivateMessage(event.getClientId(), "[color=red]Es wurden [B]" + i1 + "[/B] Teammitglieder benachrichtigt![/color]");
-                    } else {
-                        Datasave.api.moveClient(client.getId(), Datasave.eingangshalle);
-                        Datasave.api.sendPrivateMessage(client.getId(), "Du bist ein Teammitglied!");
+                    } else if(event.getTargetChannelId() == Datasave.whitelistchannel) {
+                        if (!client.isInServerGroup(Datasave.suprangint)) {
+                            int i1 = 0;
+                            for (Client sup : Datasave.api.getClients()) {
+                                if (!(sup.isServerQueryClient())) {
+                                    for (int i = 0; i < sup.getServerGroups().length; i++) {
+                                        if (!sup.isInServerGroup(Datasave.poke)) {
+                                            if (sup.getServerGroups()[i] == Datasave.suprangint) {
+                                                i1++;
+                                                Datasave.api.pokeClient(sup.getId(), "Der Spieler " + client.getNickname() + " wartet im Support!");
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            Datasave.api.sendPrivateMessage(event.getClientId(), "[color=red]Es wurden [B]" + i1 + "[/B] Teammitglieder benachrichtigt![/color]");
+                        } else {
+                            Datasave.api.moveClient(client.getId(), Datasave.eingangshalle);
+                            if (!client.isInServerGroup(Datasave.chat)) {
+                                Datasave.api.sendPrivateMessage(client.getId(), "Du bist ein Teammitglied!");
+                            }
+                        }
                     }
-                }
-                }
+                } catch (Exception e) { }
+            }
 
             @Override
             public void onChannelCreate(ChannelCreateEvent event) {

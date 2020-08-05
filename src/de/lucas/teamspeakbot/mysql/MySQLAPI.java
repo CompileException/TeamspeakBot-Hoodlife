@@ -26,7 +26,11 @@ public class MySQLAPI {
 
     public void createPlayer(final String uid, final String name) {
         if (!playerExists(uid)) {
-            mySQL.update("INSERT INTO teamspeak_stats (UID, Name, Job, JobID, Cash) VALUES ('" + uid + "', '" + name + "', 'unused', '0', '0')");
+            mySQL.update("INSERT INTO teamspeak_stats (UID, Name) VALUES ('" + uid + "', '" + name + "')");
         }
+    }
+
+    public void setName(final String uid, final String name) {
+
     }
 }

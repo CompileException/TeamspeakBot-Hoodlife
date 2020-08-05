@@ -10,6 +10,9 @@ import com.github.theholywaffle.teamspeak3.TS3Api;
 import com.github.theholywaffle.teamspeak3.TS3Config;
 import com.github.theholywaffle.teamspeak3.TS3Query;
 import com.github.theholywaffle.teamspeak3.api.ChannelProperty;
+import com.github.theholywaffle.teamspeak3.api.event.TS3EventType;
+import com.github.theholywaffle.teamspeak3.api.reconnect.ConnectionHandler;
+import com.github.theholywaffle.teamspeak3.api.reconnect.ReconnectStrategy;
 import com.github.theholywaffle.teamspeak3.api.wrapper.Client;
 import de.lucas.teamspeakbot.events.Events;
 import de.lucas.teamspeakbot.mysql.MySQL;
@@ -24,8 +27,8 @@ public class Datasave {
     START STRINGS
      */
 
-    public static final String botversion = "3.5";
-    public static final String lastupdate = "20.07.2020 || 02 Uhr";
+    public static final String botversion = "0.1.8";
+    public static final String lastupdate = "24.07.2020 || 23:14 Uhr";
 
     public static final String botname = "Hoodlife-Query[" + getInstance().getRandomNumber(1, 20) + "]";
 
@@ -66,15 +69,24 @@ public class Datasave {
      */
     public static final int supportchannel = 44419;
     public static final int whitelistchannel = 56279;
+    public static final int projektleitung = 44420;
 
     public static final int eingangshalle = 44309;
     public static final int ingamechannel = 44427;
     public static final int afkchannel = 44448;
+    public static final int querychannel = 44298;
+
+    /*
+    GET DATE
+     */
 
     public String getDatePrefix() {
         final SimpleDateFormat simpleDateFormat = new SimpleDateFormat("[HH:mm:ss] ");
         return simpleDateFormat.format(Calendar.getInstance().getTime());
     }
+    /*
+    ADD SUPPORTER
+     */
 
     public void addonlineSupport() {
         Timer timer = new Timer();
@@ -87,14 +99,16 @@ public class Datasave {
                         onlinesups.add(client.getId());
                     }
                     if (client.getIdleTime() > 1 * 60 * 5000) {
-                        if (client.getChannelId() != ingamechannel && client.getChannelId() != afkchannel) {
+                        if (!(client.getChannelId() != ingamechannel || client.getChannelId() != afkchannel)) {
                             if (!(client.isInServerGroup(Datasave.serveradminint))) {
                                 api.moveClient(client.getId(), Datasave.afkchannel);
                                 api.sendPrivateMessage(client.getId(), "Da du länger als 5 min weg warst, wurdest du in den AFK Channel gemoved!");
-                                if (client.isInServerGroup(Datasave.suprangint)) {
-                                    api.moveClient(client.getId(), Datasave.afkchannel);
-                                    api.removeClientFromServerGroup(Datasave.suprangint, client.getDatabaseId());
-                                    api.sendPrivateMessage(client.getId(), "Der Support Rang wurde entfernt!");
+                                if(!client.isServerQueryClient()) {
+                                    if (client.isInServerGroup(Datasave.suprangint)) {
+                                        api.moveClient(client.getId(), Datasave.afkchannel);
+                                        api.removeClientFromServerGroup(Datasave.suprangint, client.getDatabaseId());
+                                        api.sendPrivateMessage(client.getId(), "Der Support Rang wurde entfernt!");
+                                    }
                                 }
                             }
                         }
@@ -111,9 +125,11 @@ public class Datasave {
     public void sendJoinMessageDev(Client client) {
         if (client.isInServerGroup(Datasave.devrangint) || client.isInServerGroup(Datasave.serveradminint)) {
             if (!client.isInServerGroup(Datasave.togglebotrangint)) {
-                api.sendPrivateMessage(client.getId(), "[color=green]Hood-Life Query-Bot ist online![/color]");
-                api.sendPrivateMessage(client.getId(), "Version: " + Datasave.botversion);
-                api.sendPrivateMessage(client.getId(), "Letztes Update: " + Datasave.lastupdate);
+                api.sendPrivateMessage(client.getId(), " " +
+                        "\n[color=green]Hood-Life Query-Bot ist online![/color] " +
+                        "\nVersion: " + Datasave.botversion +
+                        "\nLetztes Update: " + Datasave.lastupdate +
+                        "\nCommands: [!addsupport, !removesupport, !togglebot, !addSupportall, !removeSupportall]");
             }
         }
     }
@@ -124,13 +140,11 @@ public class Datasave {
 
     public void sendJoinMessageTeam(Client client) {
         if(!client.isInServerGroup(Datasave.togglebotrangint)) {
-            api.sendPrivateMessage(client.getId(), "[color=green]Du wurdest als Teammitglied erkannt![/color]");
-            api.sendPrivateMessage(client.getId(), "Folgende Commands stehen für dich bereit!");
-            api.sendPrivateMessage(client.getId(), "!addsupport - Bekomme den Support Rang");
-            api.sendPrivateMessage(client.getId(), "!removesupport - Entziehe dir den Support Rang");
-            api.sendPrivateMessage(client.getId(), "!opensupport - Öffne den Support");
-            api.sendPrivateMessage(client.getId(), "!closesupport - Schließe den Support");
-            api.sendPrivateMessage(client.getId(), "!togglebot - Bekomme diese Nachricht vom Bot nichtmehr");
+            api.sendPrivateMessage(client.getId(), " " +
+                    "\n[color=green]Du wurdest als Teammitglied erkannt![/color] " +
+                    "\nFolgende Commands stehen für dich bereit: [!addsupport, !removesupport, !togglebot]");
+
+            //api.sendPrivateMessage(client.getId(), "Folgende Commands stehen für dich bereit[!addsupport, !removesupport, !togglebot]");
         }
         Datasave.onlinesups.add(client.getId());
         if (!client.isInServerGroup(Datasave.suprangint)) {
@@ -145,7 +159,7 @@ public class Datasave {
      */
 
     public MySQL mySQL = new MySQL("localhost", "root", "", "fivem");
-    public MySQLAPI mySQLAPI;
+    public static MySQLAPI mySQLAPI;
 
     /*
     TSAPI METHODS
@@ -160,12 +174,31 @@ public class Datasave {
      */
 
     public final void startTeamspeakBot() {
-        sendStartScreen();
         /*
         CONFIG
          */
         config.setHost("185.223.28.104");
         config.setQueryPort(40014);
+
+        // Use default exponential backoff reconnect strategy
+        config.setReconnectStrategy(ReconnectStrategy.exponentialBackoff());
+
+        // Make stuff run every time the query (re)connects
+        config.setConnectionHandler(new ConnectionHandler() {
+
+            public void onConnect(TS3Api api) {
+                stuffThatNeedsToRunEveryTimeTheQueryConnects(api);
+            }
+
+            @Override
+            public void onConnect(TS3Query ts3Query) {
+            }
+
+            @Override
+            public void onDisconnect(TS3Query ts3Query) {
+                // Nothing
+            }
+        });
 
         /*
         QUERY
@@ -175,7 +208,7 @@ public class Datasave {
         /*
         API
          */
-        api.login("HoodLifeQuery", "WMqBOCFF");
+        api.login("HoodLifeQuery2", "ff6IhiJc");
         api.selectVirtualServerByPort(9106);
         //api.selectVirtualServerById(1);
         api.setNickname(Datasave.botname);
@@ -194,23 +227,15 @@ public class Datasave {
             System.out.println(e.getMessage());
         }
 
+        sendStartScreen();
+
         for(Client admin : Datasave.api.getClients()) {
-            if(admin.isInServerGroup(Datasave.serveradminint) || admin.isInServerGroup(Datasave.devrangint)) {
+            if(admin.isInServerGroup(Datasave.serveradminint) || admin.isInServerGroup(Datasave.devrangint) || admin.getUniqueIdentifier().equalsIgnoreCase("rZpskg+WTOgcfFZQyPJunuuAfTQ=")) {
                 if(!admin.isInServerGroup(Datasave.chat)) {
                     Datasave.api.sendPrivateMessage(admin.getId(), "[color=green]Hoodlife Query wieder online![/color]");
                 }
             }
         }
-
-/*
-        try {
-            connectMySQL();
-        } catch (Exception e) {
-            System.out.println("FEHLER BEIM STARTEN!");
-            System.out.println("MYSQL: " + e.getMessage());
-        }
-
- */
 
     }
 
@@ -225,9 +250,13 @@ public class Datasave {
      */
 
     private void connectMySQL() {
-        if (!mySQL.isConnected()) {
+        if(!mySQL.isConnected()) {
             mySQL.connect();
-            mySQL.createTable("teamspeak_stats", "UID VARCHAR(100), Name VARCHAR(100), Job VARCHAR(100), JobID INT, Cash BIGINT");
+            mySQL.createTable("teamspeak_stats", "UID VARCHAR(100), Name VARCHAR(100)");
+        } else {
+            mySQL.close();
+            mySQL.connect();
+            mySQL.createTable("teamspeak_stats", "UID VARCHAR(100), Name VARCHAR(100)");
         }
     }
 
@@ -236,15 +265,15 @@ public class Datasave {
      */
 
     private void sendStartScreen() {
+        System.out.println(getDatePrefix() + "[INFO] Version: " + Datasave.botversion);
+        System.out.println(getDatePrefix() + "[INFO] Author: Lucas");
+        System.out.println(getDatePrefix() + "[INFO] Last Update: " + Datasave.lastupdate);
+        System.out.println(getDatePrefix() + "[INFO] Bot Name: " + Datasave.botname);
         System.out.println("");
         System.out.println("╔╦╗┌─┐┌─┐┌┬┐┌─┐┌─┐┌─┐┌─┐┬┌─╔╗ ┌─┐┌┬┐");
         System.out.println(" ║ ├┤ ├─┤│││└─┐├─┘├┤ ├─┤├┴┐╠╩╗│ │ │ ");
         System.out.println(" ╩ └─┘┴ ┴┴ ┴└─┘┴  └─┘┴ ┴┴ ┴╚═╝└─┘ ┴ ");
         System.out.println("");
-        System.out.println(getDatePrefix() + "[INFO] Version: " + Datasave.botversion);
-        System.out.println(getDatePrefix() + "[INFO] Author: Lucas");
-        System.out.println(getDatePrefix() + "[INFO] Last Update: " + Datasave.lastupdate);
-        System.out.println(getDatePrefix() + "[INFO] Bot Name: " + Datasave.botname);
     }
 
     /*
@@ -258,7 +287,7 @@ public class Datasave {
      */
 
     public MySQL getMySQL() { return mySQL; }
-    public MySQLAPI getMySQLAPI() { return mySQLAPI; }
+    public static MySQLAPI getMySQLAPI() { return mySQLAPI; }
 
     public static void updateSupport() {
         Timer timer = new Timer();
@@ -298,6 +327,15 @@ public class Datasave {
                 }
             }
         }, 1000, 1000);
+    }
+
+    private static void stuffThatNeedsToRunEveryTimeTheQueryConnects(TS3Api api) {
+        // Logging in, selecting the virtual server, selecting a channel
+        // and setting a nickname needs to be done every time we reconnect
+        api.login("HoodLifeQuery2", "ff6IhiJc");
+        api.selectVirtualServerByPort(9106);
+        api.moveQuery(Datasave.querychannel);
+        api.setNickname(Datasave.botname);
     }
 }
 
