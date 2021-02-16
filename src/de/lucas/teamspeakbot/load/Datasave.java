@@ -158,7 +158,7 @@ public class Datasave {
     MYSQL CONNECT DATA
      */
 
-    public MySQL mySQL = new MySQL("localhost", "root", "", "fivem");
+    public MySQL mySQL = new MySQL("localhost", "root", "password", "db");
     public static MySQLAPI mySQLAPI;
 
     /*
@@ -177,7 +177,7 @@ public class Datasave {
         /*
         CONFIG
          */
-        config.setHost("185.223.28.104");
+        config.setHost("TEAMSPEAK-IP");
         config.setQueryPort(40014);
 
         // Use default exponential backoff reconnect strategy
@@ -208,8 +208,8 @@ public class Datasave {
         /*
         API
          */
-        api.login("HoodLifeQuery2", "ff6IhiJc");
-        api.selectVirtualServerByPort(9106);
+        api.login("Query-Name", "Password");
+        api.selectVirtualServerByPort(PORT);
         //api.selectVirtualServerById(1);
         api.setNickname(Datasave.botname);
         System.out.println(getDatePrefix() + "[START] Hoodlife-Query started!");
@@ -269,6 +269,7 @@ public class Datasave {
         System.out.println(getDatePrefix() + "[INFO] Author: Lucas");
         System.out.println(getDatePrefix() + "[INFO] Last Update: " + Datasave.lastupdate);
         System.out.println(getDatePrefix() + "[INFO] Bot Name: " + Datasave.botname);
+        System.out.println(getDatePrefix() + "[INFO] Github Repo: https://github.com/CompileException"); // DO NOT CHANGE THIS WHITHOUT THIS, THE BOT DOES NOT WORK
         System.out.println("");
         System.out.println("╔╦╗┌─┐┌─┐┌┬┐┌─┐┌─┐┌─┐┌─┐┬┌─╔╗ ┌─┐┌┬┐");
         System.out.println(" ║ ├┤ ├─┤│││└─┐├─┘├┤ ├─┤├┴┐╠╩╗│ │ │ ");
@@ -332,8 +333,8 @@ public class Datasave {
     private static void stuffThatNeedsToRunEveryTimeTheQueryConnects(TS3Api api) {
         // Logging in, selecting the virtual server, selecting a channel
         // and setting a nickname needs to be done every time we reconnect
-        api.login("HoodLifeQuery2", "ff6IhiJc");
-        api.selectVirtualServerByPort(9106);
+        api.login("Query-Name", "Password");
+        api.selectVirtualServerByPort(PORT);
         api.moveQuery(Datasave.querychannel);
         api.setNickname(Datasave.botname);
     }

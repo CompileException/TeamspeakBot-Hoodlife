@@ -26,7 +26,7 @@ public class Utils {
 
                         }
                     } else {
-                        Datasave.api.banClient(all.getId(), "Du darfst diesen Rang nicht haben!", "Du darfst diesen Rang nicht haben!")
+                        Datasave.api.banClient(all.getId(), 10, "Du darfst diesen Rang nicht haben!");
                     }
                 }
             }

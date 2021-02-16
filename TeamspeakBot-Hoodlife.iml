@@ -7,7 +7,7 @@
     </content>
     <orderEntry type="jdk" jdkName="1.8" jdkType="JavaSDK" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="library" name="teamspeak3-api-1.2.0-with-dependencies" level="project" />
     <orderEntry type="library" name="mysql-connector-java-5.1.49" level="project" />
+    <orderEntry type="library" name="teamspeak3-api-1.2.0-with-dependencies" level="project" />
   </component>
 </module>
